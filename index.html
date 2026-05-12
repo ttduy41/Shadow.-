@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW SHOP - VIP SYSTEM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #7b2cbf; --cyan: #00f2ff; --bg: #050505; --card: #12141d; --text: #e2e8f0; --red: #ff4d4d; --green: #00ff88; --orange: #f39c12; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+        
+        /* Auth UI */
+        #auth-ui { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a0b2e 0%, #050505 100%); }
+        .auth-card { width: 90%; max-width: 400px; padding: 40px; background: var(--card); border-radius: 30px; border: 2px solid var(--primary); box-shadow: 0 0 30px rgba(123, 44, 191, 0.3); text-align: center; }
+
+        /* Layout */
+        .header { background: var(--card); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card); transition: 0.4s; z-index: 1000; padding: 25px; border-right: 1px solid var(--primary); }
+        .sidebar.active { left: 0; }
+        .menu-item { padding: 15px; cursor: pointer; color: white; display: flex; align-items: center; gap: 12px; border-radius: 10px; transition: 0.3s; margin-bottom: 5px; border-bottom: 1px solid #1e212e; }
+        .menu-item:hover { background: rgba(123, 44, 191, 0.2); color: var(--cyan); }
+
+        /* Product Cards theo mẫu hình 1000182118.jpg */
+        .container { padding: 15px; max-width: 900px; margin: auto; }
+        .card { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid #2d334a; margin-bottom: 25px; position: relative; transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        
+        .p-img { width: 100%; height: auto; display: block; border-bottom: 1px solid #2d334a; }
+        .badge { position: absolute; top: 15px; right: 15px; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 900; z-index: 10; text-transform: uppercase; }
+        .badge-on { background: var(--green); color: #000; box-shadow: 0 0 10px var(--green); }
+        .badge-off { background: var(--red); color: #fff; box-shadow: 0 0 10px var(--red); }
+
+        .p-info { padding: 20px; }
+        .input-pro { width: 100%; padding: 14px; margin: 10px 0; background: #080a12; border: 1px solid #333; color: white; border-radius: 12px; outline: none; }
+        .btn-main { width: 100%; padding: 16px; background: var(--cyan); border: none; font-weight: 900; cursor: pointer; border-radius: 12px; color: #000; transition: 0.3s; text-transform: uppercase; }
+        
+        .copy-box { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; color: var(--cyan); display: flex; justify-content: space-between; align-items: center; margin: 5px 0; }
+        .copy-btn { color: var(--text); cursor: pointer; font-size: 12px; padding: 5px; background: #333; border-radius: 4px; }
+        .price-big { font-size: 28px; color: var(--cyan); font-weight: 800; display: block; margin: 10px 0; }
+        .zalo-fixed { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+    <!-- AUTH UI -->
+    <div id="auth-ui">
+        <div class="auth-card">
+            <h2 style="color:var(--cyan)">SHADOW SYSTEM</h2>
+            <input type="text" id="user" class="input-pro" placeholder="Tài khoản...">
+            <input type="password" id="pass" class="input-pro" placeholder="Mật khẩu...">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn-main" onclick="handleLogin()">ĐĂNG NHẬP</button>
+                <button class="btn-main" onclick="handleRegister()" style="background:var(--primary); color:white;">ĐĂNG KÝ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="main-app" style="display:none">
+        <div class="header">
+            <i class="fas fa-bars" onclick="toggleSidebar()" style="cursor:pointer; color:var(--cyan); font-size:22px;"></i>
+            <div style="font-weight:900;">SHADOW <span style="color:var(--cyan)">SHOP</span></div>
+            <div id="top-balance" style="color:var(--green); font-weight:bold; border: 1px solid var(--green); padding: 4px 12px; border-radius: 20px;">0đ</div>
+        </div>
+
+        <div id="sidebar" class="sidebar">
+            <h3 id="display-name" style="text-align:center; color:var(--cyan)">Vinh</h3>
+            <div class="menu-item" onclick="showPage('home')"><i class="fas fa-shopping-cart"></i> Cửa Hàng</div>
+            <div class="menu-item" onclick="showPage('napthe')"><i class="fas fa-credit-card"></i> Nạp Thẻ Cào</div>
+            <div class="menu-item" onclick="showPage('history')"><i class="fas fa-history"></i> Lịch Sử</div>
+            <div id="admin-area" style="display:none">
+                <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+                <div class="menu-item" onclick="showPage('admin-keys')" style="color:var(--cyan)"><i class="fas fa-box-open"></i> Nhập Kho</div>
+                <div class="menu-item" onclick="addMoneyPrompt()" style="color:var(--green)"><i class="fas fa-coins"></i> Cộng Tiền</div>
+            </div>
+            <div class="menu-item" onclick="logout()" style="color:var(--red); margin-top:30px;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</div>
+        </div>
+
+        <div id="page-home" class="container">
+            <!-- DRIP SILENT (Ảnh: drip.jpg) -->
+            <div class="card">
+                <div id="badge-Drip" class="badge">...</div>
+                <img src="drip.jpg" class="p-img" onerror="this.src='https://via.placeholder.com/400x200?text=DRIP+IMAGE+MISSING'">
+                <div class="p-info">
+                    <h3>DRIP SILENT BYPASS</h3>
+                    <select id="sel-Drip" class="input-pro" onchange="updatePrice('Drip')">
+                        <option value="60000|1day">1 Ngày - 60.000đ</option>
+                        <option value="100000|7day">7 Ngày - 100.000đ</option>
+                        <option value="160000|30day">30 Ngày - 160.000đ</option>
+                    </select>
+                    <span id="price-Drip" class="price-big">60.000đ</span>
+                    <button id="btn-Drip" class="btn-main" onclick="buyKey('Drip')">MUA NGAY</button>
+                </div>
+            </div>
+
+            <!-- ZYGAME PRO (Ảnh: zygame.jpg) -->
+            <div class="card">
+                <div id="badge-Zygame" class="badge">...</div>
+                <img src="zygame.jpg" class="p-img" onerror="this.src='https://via.placeholder.com/400x200?text=ZYGAME+IMAGE+MISSING'">
+                <div class="p-info">
+                    <h3>ZYGAME PRO BYPASS</h3>
+                    <select id="sel-Zygame" class="input-pro" onchange="updatePrice('Zygame')">
+                        <option value="35000|1day">1 Ngày - 35.000đ</option>
+                        <option value="55000|3day">3 Ngày - 55.000đ</option>
+                        <option value="85000|7day">7 Ngày - 85.000đ</option>
+                        <option value="130000|30day">30 Ngày - 130.000đ</option>
+                    </select>
+                    <span id="price-Zygame" class="price-big">35.000đ</span>
+                    <button id="btn-Zygame" class="btn-main" onclick="buyKey('Zygame')">MUA NGAY</button>
+                </div>
+            </div>
+
+            <!-- ACC CLONE (Ảnh: lv5.jpg) -->
+            <div class="card">
+                <div id="badge-Clone" class="badge">...</div>
+                <img src="lv5.jpg" class="p-img" onerror="this.src='https://via.placeholder.com/400x200?text=ACC+CLONE+IMAGE+MISSING'">
+                <div class="p-info">
+                    <h3>ACC CLONE LV5</h3>
+                    <select id="sel-Clone" class="input-pro" onchange="updatePrice('Clone')">
+                        <option value="2500|1acc">1 Acc - 2.500đ</option>
+                    </select>
+                    <span id="price-Clone" class="price-big">2.500đ</span>
+                    <button id="btn-Clone" class="btn-main" onclick="buyKey('Clone')">MUA NGAY</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CÁC TRANG PHỤ -->
+        <div id="page-napthe" class="container" style="display:none">
+            <div class="card p-info">
+                <h3>NẠP THẺ CÀO (BÁO TELEGRAM)</h3>
+                <select id="card-type" class="input-pro"></select>
+                <select id="card-amount" class="input-pro">
+                    <option value="10000">10.000đ</option>
+                    <option value="20000">20.000đ</option>
+                    <option value="50000">50.000đ</option>
+                    <option value="100000">100.000đ</option>
+                    <option value="200000">200.000đ</option>
+                </select>
+                <input type="text" id="seri" class="input-pro" placeholder="Số Seri">
+                <input type="text" id="pin" class="input-pro" placeholder="Mã thẻ (PIN)">
+                <button id="btn-send-card" class="btn-main" onclick="sendToTele()" style="background:var(--green)">GỬI THẺ NGAY</button>
+            </div>
+        </div>
+
+        <div id="page-history" class="container" style="display:none">
+            <h2 style="text-align:center; color:var(--cyan)">KHO KEY ĐÃ MUA</h2>
+            <div id="hist-list"></div>
+        </div>
+
+        <div id="page-admin-keys" class="container" style="display:none">
+            <div class="card p-info">
+                <h3>QUẢN LÝ KHO HÀNG</h3>
+                <select id="adm-p-type" class="input-pro"></select>
+                <textarea id="adm-keys" class="input-pro" rows="5" placeholder="Dán key/tài khoản vào đây..."></textarea>
+                <button class="btn-main" onclick="addStock()">XÁC NHẬN NHẬP</button>
+            </div>
+        </div>
+        
+        <a href="https://zalo.me/84364684151" target="_blank" class="zalo-fixed">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" width="60">
+        </a>
+    </div>
+
+    <script>
+        const TELE_TOKEN = "8779658666:AAFKpzr52W8dlXxNwRKN7Two9_qfPCstVTM"; 
+        const TELE_CHAT_ID = "6730579641"; 
+        const ADMIN_DATA = { u: "shadow+999", p: "HV0308hv" };
+
+        let db = JSON.parse(localStorage.getItem('shadow_v14')) || {
+            users: {}, cur: null, orders: {},
+            stock: { 
+                "Drip_1day":[], "Drip_7day":[], "Drip_30day":[], 
+                "Zygame_1day":[], "Zygame_3day":[], "Zygame_7day":[], "Zygame_30day":[],
+                "Clone_1acc":[] 
+            }
+        };
+
+        function save() { localStorage.setItem('shadow_v14', JSON.stringify(db)); }
+
+        async function sendToTele() {
+            let t = document.getElementById('card-type').value, a = document.getElementById('card-amount').value, s = document.getElementById('seri').value.trim(), p = document.getElementById('pin').value.trim();
+            if(!s || !p) return alert("Vui lòng điền đủ thông tin!");
+            const msg = `💰 ĐƠN NẠP THẺ\n👤 Khách: ${db.cur}\n💳 Loại: ${t}\n💵 Mệnh giá: ${parseInt(a).toLocaleString()}đ\n📌 Seri: ${s}\n🔑 PIN: ${p}`;
+            try {
+                await fetch(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: TELE_CHAT_ID, text: msg })
+                });
+                alert("Đã báo về Telegram cho Admin!");
+            } catch (e) { alert("Lỗi kết nối!"); }
+        }
+
+        function handleLogin() {
+            let u = document.getElementById('user').value.trim(), p = document.getElementById('pass').value.trim();
+            if(u === ADMIN_DATA.u && p === ADMIN_DATA.p) { db.users[u] = db.users[u] || {pass:p, bal:0}; db.cur = u; save(); start(); return; }
+            if(db.users[u] && db.users[u].pass === p) { db.cur = u; save(); start(); } else alert("Sai tài khoản!");
+        }
+
+        function handleRegister() {
+            let u = document.getElementById('user').value.trim(), p = document.getElementById('pass').value.trim();
+            if(!u || db.users[u]) return alert("Tên TK đã tồn tại hoặc không hợp lệ!");
+            db.users[u] = { pass: p, bal: 0 }; save(); alert("Đăng ký thành công!");
+        }
+
+        function start() {
+            document.getElementById('auth-ui').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('admin-area').style.display = (db.cur === ADMIN_DATA.u) ? 'block' : 'none';
+            initApp(); updateUI(); showPage('home');
+        }
+
+        function initApp() {
+            document.getElementById('card-type').innerHTML = ["Viettel", "Vinaphone", "Mobifone"].map(t => `<option value="${t}">${t}</option>`).join('');
+            document.getElementById('adm-p-type').innerHTML = Object.keys(db.stock).map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
+        function updatePrice(p) {
+            let [price, time] = document.getElementById(`sel-${p}`).value.split('|');
+            document.getElementById(`price-${p}`).innerText = parseInt(price).toLocaleString() + "đ";
+            let count = (db.stock[`${p}_${time}`] || []).length;
+            let b = document.getElementById(`badge-${p}`);
+            b.innerText = count > 0 ? `CÒN (${count})` : "HẾT HÀNG";
+            b.className = count > 0 ? "badge badge-on" : "badge badge-off";
+        }
+
+        function buyKey(p) {
+            let [price, time] = document.getElementById(`sel-${p}`).value.split('|');
+            let path = `${p}_${time}`;
+            if(db.users[db.cur].bal < parseInt(price)) return alert("Bạn không đủ tiền!");
+            if(db.stock[path].length === 0) return alert("Sản phẩm tạm thời hết hàng!");
+            let key = db.stock[path].shift();
+            db.users[db.cur].bal -= parseInt(price);
+            db.orders[db.cur] = db.orders[db.cur] || [];
+            db.orders[db.cur].unshift({ name: p, type: time, content: key, date: new Date().toLocaleString() });
+            save(); updateUI(); updatePrice(p); alert("Mua thành công! Xem ở mục Lịch Sử.");
+        }
+
+        function addStock() {
+            let type = document.getElementById('adm-p-type').value;
+            let keys = document.getElementById('adm-keys').value.split('\n').filter(k=>k.trim());
+            db.stock[type].push(...keys); save(); alert("Đã thêm hàng!");
+            document.getElementById('adm-keys').value = '';
+        }
+
+        function addMoneyPrompt() {
+            let t = prompt("Tên TK khách cần cộng:"), m = prompt("Số tiền muốn cộng:");
+            if(db.users[t]) { db.users[t].bal += parseInt(m); save(); updateUI(); alert("Xong!"); } else alert("Không tìm thấy khách!");
+        }
+
+        function showPage(p) {
+            ['home', 'napthe', 'history', 'admin-keys'].forEach(id => document.getElementById('page-'+id).style.display = (p===id ? 'block' : 'none'));
+            if(p==='home') { updatePrice('Drip'); updatePrice('Zygame'); updatePrice('Clone'); }
+            if(p==='history') renderHistory();
+            document.getElementById('sidebar').classList.remove('active');
+        }
+
+        function renderHistory() {
+            let h = (db.orders[db.cur]||[]).map(o => `<div class="card p-info"><b>${o.name} (${o.type})</b><br><small>${o.date}</small><div class="copy-box"><span>${o.content}</span><span class="copy-btn" onclick="cp('${o.content}')">COPY</span></div></div>`).join('');
+            document.getElementById('hist-list').innerHTML = h || "<p style='text-align:center'>Bạn chưa mua sản phẩm nào.</p>";
+        }
+
+        function updateUI() { document.getElementById('top-balance').innerText = db.users[db.cur].bal.toLocaleString() + "đ"; }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function logout() { db.cur = null; save(); location.reload(); }
+        function cp(v) { navigator.clipboard.writeText(v); alert("Đã copy vào bộ nhớ!"); }
+        window.onload = () => { if(db.cur) start(); };
+    </script>
+</body>
+  </html>
+  
